@@ -1,0 +1,35 @@
+{
+  "name": "quiz-platform",
+  "version": "1.0.0",
+  "description": "Enterprise Quiz Platform",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:api": "cd packages/api && npm run start:dev",
+    "dev:web": "cd packages/web && npm run start",
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "cd packages/api && npm run build",
+    "build:web": "cd packages/web && npm run build",
+    "start:api": "cd packages/api && npm run start:prod",
+    "serve:web": "cd packages/web && npm run serve",
+    "setup": "npm install && npm run setup:api && npm run setup:web",
+    "setup:api": "cd packages/api && npm install",
+    "setup:web": "cd packages/web && npm install",
+    "test": "npm run test:api && npm run test:web",
+    "test:api": "cd packages/api && npm test",
+    "test:web": "cd packages/web && npm test",
+    "docker:build": "docker-compose -f docker-compose.yml build",
+    "docker:up": "docker-compose -f docker-compose.yml up",
+    "docker:down": "docker-compose -f docker-compose.yml down"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

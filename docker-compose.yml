@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: quiz-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: quiz_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quiz-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: quiz-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quiz-network
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./packages/api
+      dockerfile: Dockerfile.dev
+    container_name: quiz-api
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/quiz_platform
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=development
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./packages/api:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - quiz-network
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./packages/web
+      dockerfile: Dockerfile.dev
+    container_name: quiz-web
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000/api
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./packages/web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - quiz-network
+    restart: unless-stopped
+
+networks:
+  quiz-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
