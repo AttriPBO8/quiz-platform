@@ -3,6 +3,7 @@ import { UserHeader } from "@/components/UserHeader";
 import { requireUser } from "@/lib/auth";
 import { finalizeExpiredAttempts } from "@/lib/attempts";
 import { db } from "@/lib/db";
+import { formatDateTime } from "@/lib/constants";
 import { quizStatusFor, quizWindow, type QuizStatus } from "@/lib/quiz-engine";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +15,6 @@ const SECTIONS: { status: QuizStatus; title: string; empty: string }[] = [
   { status: "COMPLETED", title: "Completed", empty: "You haven't passed a quiz yet." },
 ];
 
-const fmt = (d: Date) => d.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default async function MyQuizzes({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const user = await requireUser();
@@ -61,15 +61,15 @@ export default async function MyQuizzes({ searchParams }: { searchParams: Promis
                     <article key={c.quiz.id} className="card flex flex-col p-5">
                       <h3 className="text-lg font-semibold">{c.quiz.title}</h3>
                       <p className="mt-1 text-sm text-muted">{c.questions} questions · {c.quiz.timeLimitMinutes} minutes · pass mark {c.quiz.passingScore}%</p>
-                      {c.quiz.closesAt && <p className="mt-1 text-sm text-muted">Complete by {fmt(c.quiz.closesAt)}</p>}
+                      {c.quiz.closesAt && <p className="mt-1 text-sm text-muted">Complete by {formatDateTime(c.quiz.closesAt)}</p>}
                       {c.best !== null && <p className="mt-2 text-sm">Best score: <strong>{c.best}%</strong></p>}
                       <div className="mt-auto pt-4">
                         {c.status === "COMPLETED" ? (
                           <span className="inline-flex rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success">Passed</span>
                         ) : c.status === "BLOCKED" ? (
-                          <p className="text-sm text-danger">Two attempts did not pass. You can try again after {fmt(c.blockedUntil!)}.</p>
+                          <p className="text-sm text-danger">Two attempts did not pass. You can try again after {formatDateTime(c.blockedUntil!)}.</p>
                         ) : c.window === "NOT_OPEN" ? (
-                          <p className="text-sm text-muted">Opens {fmt(c.quiz.opensAt!)}</p>
+                          <p className="text-sm text-muted">Opens {formatDateTime(c.quiz.opensAt!)}</p>
                         ) : c.window === "CLOSED" ? (
                           <p className="text-sm text-muted">This quiz has closed.</p>
                         ) : (

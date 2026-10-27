@@ -108,7 +108,8 @@ body { background: var(--bg); color: var(--text); }
 .label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.35rem; }
 .table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .table th { text-align: left; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; background: var(--primary-soft); color: var(--text); padding: 0.6rem 0.75rem; white-space: nowrap; }
-.table td { padding: 0.55rem 0.75rem; border-top: 1px solid var(--border); vertical-align: top; }
+.table td { padding: 0.55rem 0.75rem; border-top: 1px solid var(--border); vertical-align: top; white-space: nowrap; }
+.table td.wrap { white-space: normal; min-width: 18rem; }
 .table tbody tr:hover { background: var(--surface-2); }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 

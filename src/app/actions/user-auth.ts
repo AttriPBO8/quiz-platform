@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
-import { LOGIN_LOCK_MINUTES, LOGIN_MAX_FAILURES } from "@/lib/constants";
+import { formatTime, LOGIN_LOCK_MINUTES, LOGIN_MAX_FAILURES } from "@/lib/constants";
 import { checkPasswordStrength, protectPassword, verifyPassword } from "@/lib/passwords";
 import { clearSession, createSession } from "@/lib/session";
 
@@ -34,7 +34,7 @@ export async function loginUser(_: FormState, form: FormData): Promise<FormState
     return { error: generic };
   }
   if (user.lockedUntil && user.lockedUntil > new Date()) {
-    return { error: `Too many wrong passwords. Try again after ${user.lockedUntil.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}, or ask your admin to reset it.` };
+    return { error: `Too many wrong passwords. Try again after ${formatTime(user.lockedUntil)}, or ask your admin to reset it.` };
   }
   if (!(await verifyPassword(password, user.passwordHash))) {
     const failures = user.failedLogins + 1;

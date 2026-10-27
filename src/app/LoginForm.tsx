@@ -12,6 +12,7 @@ export function LoginForm({ districts }: { districts: District[] }) {
   const [districtId, setDistrictId] = useState("");
   const [blockId, setBlockId] = useState("");
   const [roleType, setRoleType] = useState("");
+  const [phone, setPhone] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const blocks = districts.find((d) => d.id === districtId)?.blocks ?? [];
 
@@ -37,7 +38,7 @@ export function LoginForm({ districts }: { districts: District[] }) {
       />
       <div>
         <label htmlFor="phone" className="label">Phone number</label>
-        <input id="phone" name="phone" className="input" inputMode="numeric" autoComplete="tel-national" maxLength={10} pattern="\d{10}" placeholder="10-digit mobile number" required />
+        <input id="phone" name="phone" className="input" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))} inputMode="numeric" autoComplete="tel-national" maxLength={10} pattern="\d{10}" placeholder="10-digit mobile number" required />
       </div>
       <div>
         <label htmlFor="password" className="label">Password</label>
