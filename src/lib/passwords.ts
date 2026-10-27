@@ -37,11 +37,13 @@ export function checkPasswordStrength(plain: string): string | null {
   return null;
 }
 
-/** A random 12-character alphanumeric password (no look-alike characters). */
+/** A random alphanumeric password with at least one letter and one digit (no look-alike characters). */
 export function generatePassword(length = 12): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
-  const bytes = randomBytes(length);
-  return Array.from(bytes, (b) => chars[b % chars.length]).join("");
+  for (;;) {
+    const pw = Array.from(randomBytes(length), (b) => chars[b % chars.length]).join("");
+    if (/[A-Za-z]/.test(pw) && /[0-9]/.test(pw)) return pw;
+  }
 }
 
 export async function protectPassword(plain: string) {

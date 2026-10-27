@@ -47,7 +47,7 @@ export async function loginUser(_: FormState, form: FormData): Promise<FormState
   }
   await db.user.update({ where: { id: user.id }, data: { failedLogins: 0, lockedUntil: null } });
   await createSession({ sub: user.id, kind: "user", ver: user.sessionVersion });
-  redirect("/quizzes");
+  redirect(user.passwordChangedAt ? "/quizzes" : "/account/password");
 }
 
 export async function logoutUser() {
@@ -56,7 +56,7 @@ export async function logoutUser() {
 }
 
 export async function changeUserPassword(_: FormState, form: FormData): Promise<FormState> {
-  const user = await requireUser();
+  const user = await requireUser({ allowStartingPassword: true });
   const current = String(form.get("current") ?? "");
   const next = String(form.get("next") ?? "");
   const confirm = String(form.get("confirm") ?? "");
@@ -72,5 +72,6 @@ export async function changeUserPassword(_: FormState, form: FormData): Promise<
   });
   // Changing the password signs out other devices; keep this one signed in.
   await createSession({ sub: user.id, kind: "user", ver: updated.sessionVersion });
+  if (!user.passwordChangedAt) redirect("/quizzes");
   return { ok: "Password changed." };
 }

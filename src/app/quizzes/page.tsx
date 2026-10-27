@@ -37,12 +37,6 @@ export default async function MyQuizzes({ searchParams }: { searchParams: Promis
         <h1 className="text-2xl font-bold">Hello, {user.name.split(" ")[0]}</h1>
         <p className="text-muted">Here are the quizzes assigned to you.</p>
 
-        {!user.passwordChangedAt && (
-          <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl bg-warning-soft px-4 py-3 text-warning-text">
-            <span className="flex-1">You are using the starting password. Set your own to keep your account safe.</span>
-            <Link href="/account/password" className="btn btn-secondary">Change password</Link>
-          </div>
-        )}
         {error === "no-questions" && (
           <p role="alert" className="mt-4 rounded-lg bg-danger-soft px-3 py-2 text-danger">This quiz has no questions yet. Please tell your admin.</p>
         )}

@@ -33,9 +33,14 @@ export async function currentUserId(): Promise<string | null> {
   return u && u.active && u.sessionVersion === s.ver ? s.sub : null;
 }
 
-export async function requireUser() {
+/**
+ * The signed-in quiz-taker. Anyone still on the starting password (new, or reset by an admin)
+ * is sent to set their own before they can do anything else.
+ */
+export async function requireUser({ allowStartingPassword = false } = {}) {
   const user = await getCurrentUser();
   if (!user) redirect("/");
+  if (!user.passwordChangedAt && !allowStartingPassword) redirect("/account/password");
   return user;
 }
 

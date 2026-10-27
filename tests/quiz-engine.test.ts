@@ -50,3 +50,13 @@ test("two failed attempts in 24 hours block the quiz", () => {
   assert.equal(quizStatusFor([fail(5), { ...fail(1), passed: true, score: 80 }], now).status, "COMPLETED");
   assert.equal(quizStatusFor([], now).status, "ASSIGNED");
 });
+
+test("generated passwords always mix letters and digits", async () => {
+  const { generatePassword } = await import("../src/lib/passwords");
+  for (let i = 0; i < 200; i++) {
+    const pw = generatePassword(10);
+    assert.equal(pw.length, 10);
+    assert.match(pw, /[A-Za-z]/);
+    assert.match(pw, /[0-9]/);
+  }
+});

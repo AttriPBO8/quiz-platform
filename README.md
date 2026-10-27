@@ -7,7 +7,7 @@ A responsive web app for timed multiple-choice quizzes. Teachers, Workers and He
 ## What it does
 
 **For quiz-takers**
-- Sign in with searchable District, Block and Role lists, phone number and password. Everyone starts with a shared starting password and can change it.
+- Sign in with searchable District, Block and Role lists, phone number and password. Everyone starts with a shared starting password and must set their own at first sign-in (and again after an admin resets it).
 - My quizzes: Assigned, In progress, Blocked and Completed.
 - Honor code, then a rules pop-up (questions, minutes, pass mark).
 - 30 questions (10 Easy, 10 Medium, 10 Hard by default), picked at random. A retake avoids questions already seen.
@@ -125,5 +125,5 @@ docs/DEPLOY-AWS.md       Going live on AWS
 - Five wrong passwords lock an account for 15 minutes. Sessions last 8 hours and end on password change or deactivation.
 - Every admin page and download checks the admin's role and limits data to their own users.
 - During a quiz, copying, right-click and print shortcuts are blocked. Browsers cannot fully block screenshots, so treat this as a deterrent.
-- Because everyone starts with the same password, anyone who knows a person's District, Block, Role and phone could sign in as them until they change it. The app reminds people to change it; consider asking everyone to do so on first sign-in.
+- Everyone starts with the same password, so quiz-takers must set their own before they can see or take a quiz. Until a person does, anyone who knows their District, Block, Role, phone and the starting password could sign in first, so share the starting password only with the people taking quizzes.
 - Never commit `.env`. It is already listed in `.gitignore`.
