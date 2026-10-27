@@ -25,6 +25,14 @@ export const getCurrentAdmin = cache(async () => {
   return admin;
 });
 
+/** Lighter check for frequent calls (saving answers): returns the user id or null. */
+export async function currentUserId(): Promise<string | null> {
+  const s = await readSession("user");
+  if (!s) return null;
+  const u = await db.user.findUnique({ where: { id: s.sub }, select: { active: true, sessionVersion: true } });
+  return u && u.active && u.sessionVersion === s.ver ? s.sub : null;
+}
+
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) redirect("/");

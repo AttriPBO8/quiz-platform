@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/auth";
+import { currentUserId, requireUser } from "@/lib/auth";
 import { finalizeAttempt, finalizeExpiredAttempts, GRACE_SECONDS } from "@/lib/attempts";
 import { quizStatusFor, quizWindow, selectQuestions } from "@/lib/quiz-engine";
 
@@ -50,25 +50,27 @@ export async function startQuiz(quizId: string) {
 
 /** Saves one answer as soon as it is chosen. Returns false if the attempt is no longer open. */
 export async function saveAnswer(attemptId: string, position: number, choice: number): Promise<boolean> {
-  const user = await requireUser();
+  const userId = await currentUserId();
+  if (!userId) return false;
   if (!Number.isInteger(position) || !Number.isInteger(choice) || position < 0 || choice < -1 || choice > 9) return false;
   // One atomic update, so quick taps on different questions never overwrite each other.
   const changed = await db.$executeRaw`
     UPDATE "Attempt" SET answers[${position + 1}] = ${choice}
-    WHERE id = ${attemptId} AND "userId" = ${user.id} AND status = 'IN_PROGRESS'
+    WHERE id = ${attemptId} AND "userId" = ${userId} AND status = 'IN_PROGRESS'
       AND deadline > now() - make_interval(secs => ${GRACE_SECONDS})
       AND ${position + 1} <= cardinality(answers)`;
   return changed === 1;
 }
 
 export async function setFlag(attemptId: string, position: number, flagged: boolean): Promise<boolean> {
-  const user = await requireUser();
+  const userId = await currentUserId();
+  if (!userId) return false;
   if (!Number.isInteger(position) || position < 0 || position > 500) return false;
   const changed = flagged
     ? await db.$executeRaw`UPDATE "Attempt" SET flagged = array_append(array_remove(flagged, ${position}), ${position})
-        WHERE id = ${attemptId} AND "userId" = ${user.id} AND status = 'IN_PROGRESS'`
+        WHERE id = ${attemptId} AND "userId" = ${userId} AND status = 'IN_PROGRESS'`
     : await db.$executeRaw`UPDATE "Attempt" SET flagged = array_remove(flagged, ${position})
-        WHERE id = ${attemptId} AND "userId" = ${user.id} AND status = 'IN_PROGRESS'`;
+        WHERE id = ${attemptId} AND "userId" = ${userId} AND status = 'IN_PROGRESS'`;
   return changed === 1;
 }
 
