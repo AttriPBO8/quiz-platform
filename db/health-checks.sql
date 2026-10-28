@@ -12,8 +12,8 @@
 --                         they only print headings in psql.)
 --
 -- Password columns (passwordHash, passwordEncrypted) are never selected.
--- Dates are stored in UTC; the daily reports convert them to India time
--- (Asia/Kolkata). Change that name if you need another time zone.
+-- Dates are stored in UTC; the daily reports convert them to Toronto time
+-- (America/Toronto, Eastern; handles daylight saving). Change that name if you need another time zone.
 -- =====================================================================
 
 SET default_transaction_read_only = on;  -- any accidental write fails
@@ -448,15 +448,15 @@ SELECT z.title AS quiz, z.active,
 FROM "Quiz" z LEFT JOIN best b ON b."quizId" = z.id
 GROUP BY z.id, z.title, z.active ORDER BY z.active DESC, z.title;
 
-\echo '--- 5.3 Attempts per day, last 14 days (India time)'
-SELECT ("startedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date AS day,
+\echo '--- 5.3 Attempts per day, last 14 days (Toronto time)'
+SELECT ("startedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Toronto')::date AS day,
        count(*) AS started, count(*) FILTER (WHERE status = 'SUBMITTED') AS submitted,
        count(*) FILTER (WHERE passed) AS passed, count(DISTINCT "userId") AS people
 FROM "Attempt" WHERE "startedAt" > now() - interval '14 days'
 GROUP BY 1 ORDER BY 1;
 
-\echo '--- 5.4 Busiest hours, last 7 days (India time), for capacity planning'
-SELECT date_trunc('hour', "startedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata') AS hour,
+\echo '--- 5.4 Busiest hours, last 7 days (Toronto time), for capacity planning'
+SELECT date_trunc('hour', "startedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Toronto') AS hour,
        count(*) AS attempts_started
 FROM "Attempt" WHERE "startedAt" > now() - interval '7 days'
 GROUP BY 1 ORDER BY attempts_started DESC LIMIT 10;
@@ -475,8 +475,8 @@ FROM answered a JOIN "Question" q ON q.id = a.qid JOIN "QuestionBank" qb ON qb.i
 GROUP BY qb.name, q.id HAVING count(*) >= 10
 ORDER BY percent_correct LIMIT 20;
 
-\echo '--- 5.6 Users added per week (India time)'
-SELECT date_trunc('week', "createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date AS week_starting,
+\echo '--- 5.6 Users added per week (Toronto time)'
+SELECT date_trunc('week', "createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Toronto')::date AS week_starting,
        count(*) AS users_added
 FROM "User" GROUP BY 1 ORDER BY 1 DESC LIMIT 12;
 
