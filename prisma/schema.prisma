@@ -191,3 +191,25 @@ model Attempt {
   @@index([userId, quizId])
   @@index([quizId, status])
 }
+
+/// Security log: sign-ins (successful and not), lockouts, password changes and resets,
+/// account changes, data downloads and refused access. Kept for a year.
+model SecurityEvent {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  /// For example USER_LOGIN, ADMIN_LOGIN, PASSWORD_CHANGE, ACCOUNT_LOCKED.
+  type       String
+  success    Boolean
+  /// "quiz" or "admin"
+  portal     String
+  /// Who it was about, as "user:<id>" or "admin:<id>", when known.
+  account    String?
+  /// Readable label: admin username, or a quiz-taker's name with the phone masked.
+  label      String?
+  ip         String?
+  userAgent  String?
+  detail     String?
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+}

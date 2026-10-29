@@ -1,4 +1,6 @@
-// Load test for a LOCAL copy only: `npm run build && npm start`, then in another terminal
+// Load test for a LOCAL copy only: `npm run build`, then start the app with the per-address limit
+// raised (every simulated person shares one address): `set RATE_LIMIT_PER_MINUTE=1000000 && npm start`
+// (Windows) or `RATE_LIMIT_PER_MINUTE=1000000 npm start`, then in another terminal
 //   npx tsx scripts/load-test.ts 500
 // N simulated quiz-takers open the quiz page and save 30 answers each, all at the same moment.
 // It creates its own attempts (marked "load-test") and removes them at the end.

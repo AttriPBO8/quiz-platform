@@ -17,6 +17,7 @@ const securityHeaders = [
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
+      ...(isDev ? [] : ["upgrade-insecure-requests"]),
     ].join("; "),
   },
   { key: "X-Frame-Options", value: "DENY" },
@@ -24,6 +25,11 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
   { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+  // Keep other sites from opening this app in a linked window or embedding its files.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+  { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
+  { key: "X-DNS-Prefetch-Control", value: "off" },
 ];
 
 const nextConfig: NextConfig = {

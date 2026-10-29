@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { db } from "./db";
 import { readSession } from "./session";
+import { securityEvent } from "./security";
 
 // Helpers that load the signed-in account for a page or action.
 // Every protected page and server action calls one of these first.
@@ -52,7 +53,10 @@ export async function requireAdmin() {
 
 export async function requireSuperAdmin() {
   const admin = await requireAdmin();
-  if (admin.role !== "SUPER_ADMIN") redirect("/admin");
+  if (admin.role !== "SUPER_ADMIN") {
+    await securityEvent({ type: "ACCESS_DENIED", success: false, portal: "admin", account: `admin:${admin.id}`, label: admin.username, detail: "Tried to open a Super Admin page or action" });
+    redirect("/admin");
+  }
   return admin;
 }
 

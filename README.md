@@ -131,4 +131,7 @@ docs/DEPLOY-AWS.md       Going live on AWS
 - Every admin page and download checks the admin's role and limits data to their own users.
 - During a quiz, copying, right-click and print shortcuts are blocked. Browsers cannot fully block screenshots, so treat this as a deterrent.
 - Everyone starts with the same password, so quiz-takers must set their own before they can see or take a quiz. Until a person does, anyone who knows their District, Block, Role, phone and the starting password could sign in first, so share the starting password only with the people taking quizzes.
+- Requests that are too large, use unusual methods, or come too fast from one address are refused (HTTP 413, 405 or 429). Limits: 1200 requests a minute per address (change with `RATE_LIMIT_PER_MINUTE`), 100 quiz sign-in attempts and 30 admin sign-in attempts per 10 minutes per address. On AWS, also turn on the firewall (docs/DEPLOY-AWS.md, step 7).
+- Logs: separate access logs for the quiz and admin sites, a security log and a log of every database change. See docs/DEPLOY-AWS.md, step 8. On a laptop they are in the `logs` folder; the Super Admin also has **Security log** in the admin menu.
+- Logs never contain passwords, password hashes or session tokens, and show only the last 4 digits of phone numbers. Every data download is recorded in the security log.
 - Never commit `.env`. It is already listed in `.gitignore`.
