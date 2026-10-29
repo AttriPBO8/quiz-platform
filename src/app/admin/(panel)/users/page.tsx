@@ -33,7 +33,6 @@ export default async function Users({ searchParams }: { searchParams: Promise<Re
     filterOptions(admin),
     isSuper ? db.admin.findMany({ where: { role: "LOCAL_ADMIN" }, orderBy: { name: "asc" } }) : Promise.resolve([]),
   ]);
-  const query = new URLSearchParams(Object.entries(f).filter(([, v]) => v) as [string, string][]).toString();
 
   return (
     <div className="space-y-4">
@@ -42,7 +41,6 @@ export default async function Users({ searchParams }: { searchParams: Promise<Re
           <h1 className="text-2xl font-bold">Users</h1>
           <p className="text-muted">{total} quiz-taker{total === 1 ? "" : "s"}{total > LIMIT ? `, showing the first ${LIMIT}. Use the filters to narrow down.` : "."}</p>
         </div>
-        <a className="btn btn-secondary" href={`/admin/export/passwords?${query}`}>Download passwords CSV</a>
       </div>
       {isSuper && <UploadUsers />}
       <FilterBar

@@ -36,7 +36,7 @@ On your laptop, in the project folder, run:
 ```
 npm run setup -- --print
 ```
-It prints `SESSION_SECRET`, `PASSWORD_ENCRYPTION_KEY` and `DEFAULT_USER_PASSWORD`. Use these new values for AWS, not the ones in your local `.env`. Save `PASSWORD_ENCRYPTION_KEY` in your password manager: if it is ever lost, admins can no longer view stored passwords (sign-in still works, and resetting a password fixes it for that user).
+It prints `SESSION_SECRET` and `DEFAULT_USER_PASSWORD`. Use these new values for AWS, not the ones in your local `.env`. Keep `DEFAULT_USER_PASSWORD` somewhere safe, because it is the password you give quiz-takers for their first sign-in.
 
 ## 3. Connect Amplify to GitHub
 
@@ -49,7 +49,6 @@ It prints `SESSION_SECRET`, `PASSWORD_ENCRYPTION_KEY` and `DEFAULT_USER_PASSWORD
 | --- | --- |
 | `DATABASE_URL` | the database address from step 1 |
 | `SESSION_SECRET` | from step 2 |
-| `PASSWORD_ENCRYPTION_KEY` | from step 2 |
 | `DEFAULT_USER_PASSWORD` | from step 2 |
 
 5. **Save and deploy**. The first build takes about 5 minutes. It also creates the database tables.

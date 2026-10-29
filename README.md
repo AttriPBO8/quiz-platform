@@ -21,7 +21,7 @@ A responsive web app for timed multiple-choice quizzes. Teachers, Workers and He
 
 **For admins** (sign in at `/admin/login`)
 - Results: one row per person per quiz, with filters, sortable columns, summary counts and CSV download. Click a name for the question-by-question detail of an attempt.
-- Users: upload a CSV, view or reset passwords, deactivate accounts, download the passwords CSV.
+- Users: upload a CSV, reset a user to the starting password (they must choose a new one at sign-in), deactivate accounts. Nobody, admins included, can see a user's password.
 - Quizzes: create, set question counts, time limit, pass mark and dates, assign by District, Block and Role.
 - Question banks (Super Admin): upload JSON, see how often each question is answered correctly, hide a question.
 - Admins (Super Admin): add Local Admins and reset their passwords.
@@ -68,7 +68,7 @@ You need to do steps 1 to 4 once. After that, only step 7 is needed each day.
 | Super Admin | `/admin/login`, username `superadmin`, password = `SEED_ADMIN_PASSWORD` in `.env` |
 | Local Admin | `localadmin1` to `localadmin5`, same password as the Super Admin |
 
-All 200 sample users are in `data/sample-users.csv`; the 100 sample questions are in `data/sample-questions.json`.
+All 200 sample users are in `data/sample-users.csv`. The sample questions are in `data/sample-questions.json` (100 general knowledge) and `data/sample-questions-math.json` (45 maths). Every user is assigned three sample quizzes: "Topic A - Sample Text" (30 questions), "Mathematics Basics" (15) and "Quick Practice (6 questions)".
 
 ## Everyday commands
 
@@ -121,7 +121,7 @@ docs/DEPLOY-AWS.md       Going live on AWS
 ## Security notes
 
 - Correct answers never leave the server; the browser only gets question text and options. Scoring happens on the server.
-- Passwords are stored as a bcrypt hash for sign-in, plus an AES-256 encrypted copy so admins can view them. The key lives only in the `PASSWORD_ENCRYPTION_KEY` setting.
+- Passwords are stored only as bcrypt hashes, which cannot be turned back into the password. No admin screen or export shows them.
 - Five wrong passwords lock an account for 15 minutes. Sessions last 8 hours and end on password change or deactivation.
 - Every admin page and download checks the admin's role and limits data to their own users.
 - During a quiz, copying, right-click and print shortcuts are blocked. Browsers cannot fully block screenshots, so treat this as a deterrent.

@@ -81,8 +81,6 @@ model User {
   localAdminId      String?
   /// bcrypt hash, used to check the password at login.
   passwordHash      String
-  /// AES-256-GCM encrypted copy, so admins can view it. Never sent to quiz-takers.
-  passwordEncrypted String
   active            Boolean   @default(true)
   failedLogins      Int       @default(0)
   lockedUntil       DateTime?

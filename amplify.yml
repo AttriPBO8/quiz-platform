@@ -9,7 +9,7 @@ frontend:
     build:
       commands:
         # Amplify only passes environment variables to the running app through this file.
-        - env | grep -E '^(DATABASE_URL|SESSION_SECRET|PASSWORD_ENCRYPTION_KEY|DEFAULT_USER_PASSWORD)=' >> .env.production
+        - env | grep -E '^(DATABASE_URL|SESSION_SECRET|DEFAULT_USER_PASSWORD)=' >> .env.production
         # Apply any new database changes, then build.
         - npx prisma migrate deploy
         - npm run build

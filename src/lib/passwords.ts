@@ -1,11 +1,7 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { env } from "./env";
 
-// Passwords are stored twice:
-//  - a bcrypt hash, used to check logins (cannot be reversed);
-//  - an AES-256-GCM encrypted copy, so admins can view a quiz-taker's password.
-// The encryption key lives only in the PASSWORD_ENCRYPTION_KEY environment variable.
+// Passwords are stored only as bcrypt hashes. Nobody, admins included, can read them back.
 
 export async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, 10);
@@ -13,20 +9,6 @@ export async function hashPassword(plain: string): Promise<string> {
 
 export async function verifyPassword(plain: string, hash: string): Promise<boolean> {
   return bcrypt.compare(plain, hash);
-}
-
-export function encryptPassword(plain: string): string {
-  const iv = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", env.passwordKey, iv);
-  const data = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
-  return [iv, cipher.getAuthTag(), data].map((b) => b.toString("base64")).join(".");
-}
-
-export function decryptPassword(stored: string): string {
-  const [iv, tag, data] = stored.split(".").map((s) => Buffer.from(s, "base64"));
-  const decipher = createDecipheriv("aes-256-gcm", env.passwordKey, iv);
-  decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(data), decipher.final()]).toString("utf8");
 }
 
 /** Returns an error message, or null when the password is acceptable. */
@@ -47,5 +29,5 @@ export function generatePassword(length = 12): string {
 }
 
 export async function protectPassword(plain: string) {
-  return { passwordHash: await hashPassword(plain), passwordEncrypted: encryptPassword(plain) };
+  return { passwordHash: await hashPassword(plain) };
 }

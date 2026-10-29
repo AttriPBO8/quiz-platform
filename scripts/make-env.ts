@@ -9,13 +9,12 @@ import { generatePassword } from "../src/lib/passwords";
 const arg = process.argv[2] ?? "postgres";
 const secrets = [
   `SESSION_SECRET="${randomBytes(48).toString("base64url")}"`,
-  `PASSWORD_ENCRYPTION_KEY="${randomBytes(32).toString("base64")}"`,
   `DEFAULT_USER_PASSWORD="${generatePassword(10)}"`,
 ];
 
 if (arg === "--print") {
   console.log("Paste these into Amplify > Hosting > Environment variables (without the quotes).");
-  console.log("Keep a private copy of PASSWORD_ENCRYPTION_KEY: without it, stored passwords cannot be shown.\n");
+  console.log("");
   console.log(secrets.join("\n"));
   process.exit(0);
 }

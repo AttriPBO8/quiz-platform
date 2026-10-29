@@ -6,7 +6,7 @@ import { requireAdmin, requireSuperAdmin, userScope } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { parseCsv } from "@/lib/csv";
 import { importUsers, type ImportReport } from "@/lib/importers";
-import { decryptPassword, generatePassword, protectPassword } from "@/lib/passwords";
+import { protectPassword } from "@/lib/passwords";
 
 // Admin actions on quiz-takers. Each one re-checks that the user belongs to the admin.
 
@@ -17,20 +17,16 @@ async function ownedUser(userId: string) {
   return user;
 }
 
-export async function revealPassword(userId: string): Promise<string> {
+// Admins never see a user's password. A reset puts the user back on the starting password,
+// and they must choose a new one at their next sign-in.
+export async function resetPassword(userId: string) {
   const user = await ownedUser(userId);
-  try { return decryptPassword(user.passwordEncrypted); } catch { return "(cannot be shown: reset it)"; }
-}
-
-export async function resetPassword(userId: string, useDefault: boolean): Promise<string> {
-  const user = await ownedUser(userId);
-  const plain = useDefault ? env.defaultUserPassword : generatePassword(10);
+  const plain = env.defaultUserPassword;
   await db.user.update({
     where: { id: user.id },
     data: { ...(await protectPassword(plain)), passwordChangedAt: null, failedLogins: 0, lockedUntil: null, sessionVersion: { increment: 1 } },
   });
   revalidatePath("/admin/users");
-  return plain;
 }
 
 export async function setUserActive(userId: string, active: boolean) {
