@@ -13,7 +13,7 @@ export const CERTIFICATE = {
   title: "Certificate of Completion",
   showScore: true,
   signatories: [
-    { name: "Dr. Anita Sharma", title: "Director, Training Programs", signature: "/signatures/signature-1.svg" },
+    { name: "Dr. Anita Kumari", title: "Director, Training Programs", signature: "/signatures/signature-1.svg" },
     { name: "Rajesh Kumar", title: "Program Coordinator", signature: "/signatures/signature-2.svg" },
   ],
 };
