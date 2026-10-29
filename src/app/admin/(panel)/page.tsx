@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { ROLE_TYPES } from "@/lib/constants";
 import { filterOptions, getResultRows, STATUS_LABEL, summarize, type ResultFilters } from "@/lib/reports";
@@ -27,6 +28,7 @@ export default async function Results({ searchParams }: { searchParams: Promise<
           <h1 className="text-2xl font-bold">Results</h1>
           <p className="text-muted">{admin.role === "SUPER_ADMIN" ? "Everyone" : "Your users"}, one row per person per quiz. Dummy accounts are hidden unless you filter for them.</p>
         </div>
+        {sum.passed > 0 && <Link className="btn btn-secondary" href={`/admin/certificates?${query}`}>Certificates for passed ({sum.passed})</Link>}
         <a className="btn btn-secondary" href={`/admin/export/results?${query}`}>Download CSV</a>
       </div>
 
@@ -66,8 +68,14 @@ export default async function Results({ searchParams }: { searchParams: Promise<
           { key: "attempts", label: "Attempts", numeric: true },
           { key: "dueBy", label: "Due by" },
           { key: "completedOn", label: "Passed on" },
+          { key: "certificate", label: "Certificate", linkKey: "certificateHref" },
         ]}
-        rows={rows.map(({ lastAttemptId, ...r }) => ({ ...r, href: lastAttemptId ? `/admin/attempts/${lastAttemptId}` : null }))}
+        rows={rows.map(({ lastAttemptId, passedAttemptId, ...r }) => ({
+          ...r,
+          href: lastAttemptId ? `/admin/attempts/${lastAttemptId}` : null,
+          certificate: passedAttemptId ? "View" : "",
+          certificateHref: passedAttemptId ? `/admin/certificates?attempt=${passedAttemptId}` : null,
+        }))}
       />
     </div>
   );

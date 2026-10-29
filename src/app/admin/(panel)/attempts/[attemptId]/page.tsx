@@ -40,6 +40,7 @@ export default async function AttemptDetail({ params }: { params: Promise<{ atte
           <h1 className="text-2xl font-bold">{u.name} · {attempt.quiz.title}</h1>
           <p className="text-muted">{roleLabel(u.roleType)} · {u.block.name}, {u.district.name} · {u.phone}</p>
         </div>
+        {attempt.passed && <Link className="btn btn-primary" href={`/admin/certificates?attempt=${attempt.id}`}>Certificate of Completion</Link>}
         <a className="btn btn-secondary" href={`/admin/export/attempt/${attempt.id}`}>Download CSV</a>
       </div>
       <div className="flex flex-wrap gap-2">

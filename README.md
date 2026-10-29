@@ -21,6 +21,7 @@ A responsive web app for timed multiple-choice quizzes. Teachers, Workers and He
 
 **For admins** (sign in at `/admin/login`)
 - Results: one row per person per quiz, with filters, sortable columns, summary counts and CSV download. Click a name for the question-by-question detail of an attempt.
+- Certificates: print a Certificate of Completion for one person (Results > View, or from their attempt) or for everyone who passed in the current filters, one A4 page each. Save as PDF from the print window.
 - Users: upload a CSV, reset a user to the starting password (they must choose a new one at sign-in), deactivate accounts. Nobody, admins included, can see a user's password.
 - Quizzes: create, set question counts, time limit, pass mark and dates, assign by District, Block and Role.
 - Question banks (Super Admin): upload JSON, see how often each question is answered correctly, hide a question.
@@ -98,6 +99,10 @@ All 200 sample users are in `data/sample-users.csv`. The sample questions are in
 ]
 ```
 `correctOption` counts from 1 (2 = New Delhi). Older files with a 0-based `correctAnswer` are also accepted. Uploading a question with an existing `id` updates it.
+
+## Changing the certificate
+
+The organization name, place, the two signatories and whether the score is shown are set at the top of `src/lib/certificate.ts`. The signatures are the two files in `public/signatures/`; replace them with scans of the real signatures (a PNG with a transparent background works best) and update the file names in `src/lib/certificate.ts` if they change. The date printed is the day the person first passed the quiz.
 
 ## How the code is organised
 
