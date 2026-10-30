@@ -11,7 +11,7 @@
 --                         and press F5. (Skip the lines starting with \echo;
 --                         they only print headings in psql.)
 --
--- Password columns (passwordHash, passwordEncrypted) are never selected.
+-- The password column (passwordHash) is never selected.
 -- Dates are stored in UTC; the daily reports convert them to Toronto time
 -- (America/Toronto, Eastern; handles daylight saving). Change that name if you need another time zone.
 -- =====================================================================
@@ -99,6 +99,15 @@ WITH checks(code, area, description, problems, level) AS (
   ('T10', 'Attempts', 'Time ran out but attempt not yet marked submitted',
      (SELECT count(*) FROM "Attempt" WHERE status = 'IN_PROGRESS' AND deadline < now() - interval '1 minute'), 'INFO'),
   -- Database
+  -- Site and security
+  ('Z5', 'Quizzes', 'Quiz site closes before (or when) it opens',
+     (SELECT count(*) FROM "SiteSettings" WHERE "quizSiteOpensAt" IS NOT NULL AND "quizSiteClosesAt" IS NOT NULL
+        AND "quizSiteClosesAt" <= "quizSiteOpensAt"), 'FAIL'),
+  ('S1', 'Security', 'Failed sign-ins in the last 24 hours',
+     (SELECT count(*) FROM "SecurityEvent" WHERE NOT success AND type LIKE '%LOGIN%' AND "createdAt" > now() - interval '24 hours'), 'INFO'),
+  ('S2', 'Security', 'IP addresses with 20+ failed events in the last hour (possible password guessing)',
+     (SELECT count(*) FROM (SELECT ip FROM "SecurityEvent" WHERE NOT success AND "createdAt" > now() - interval '1 hour'
+        GROUP BY ip HAVING count(*) >= 20) x), 'WARN'),
   ('D1', 'Database', 'Database updates (migrations) that failed or did not finish',
      (SELECT count(*) FROM "_prisma_migrations" WHERE finished_at IS NULL OR rolled_back_at IS NOT NULL), 'FAIL'),
   ('D2', 'Database', 'Connections not using encryption (SSL)',
@@ -144,7 +153,9 @@ UNION ALL SELECT 'Question', count(*) FROM "Question"
 UNION ALL SELECT 'Quiz', count(*) FROM "Quiz"
 UNION ALL SELECT 'QuizManager', count(*) FROM "QuizManager"
 UNION ALL SELECT 'Assignment', count(*) FROM "Assignment"
-UNION ALL SELECT 'Attempt', count(*) FROM "Attempt";
+UNION ALL SELECT 'Attempt', count(*) FROM "Attempt"
+UNION ALL SELECT 'SecurityEvent', count(*) FROM "SecurityEvent"
+UNION ALL SELECT 'SiteSettings', count(*) FROM "SiteSettings";
 
 \echo '--- 1.4 Every column: type, required or optional, default'
 SELECT table_name, ordinal_position AS pos, column_name,
@@ -423,6 +434,19 @@ GROUP BY z.title;
 
 
 -- =====================================================================
+\echo '--- Z5 Quiz site open/close window'
+SELECT "quizSiteOpensAt" AS opens, "quizSiteClosesAt" AS closes, "updatedAt" AS changed_at, "updatedBy" AS changed_by
+FROM "SiteSettings";
+
+\echo '--- S1/S2 Failed security events in the last 24 hours, by IP address'
+SELECT ip, portal, type, count(*) AS failures, min("createdAt") AS first_seen, max("createdAt") AS last_seen,
+       count(DISTINCT account) AS accounts_tried
+FROM "SecurityEvent"
+WHERE NOT success AND "createdAt" > now() - interval '24 hours'
+GROUP BY ip, portal, type ORDER BY failures DESC LIMIT 20;
+
+
+-- =====================================================================
 \echo '=== 5. REPORTS ==='
 -- =====================================================================
 
@@ -479,5 +503,11 @@ ORDER BY percent_correct LIMIT 20;
 SELECT date_trunc('week', "createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Toronto')::date AS week_starting,
        count(*) AS users_added
 FROM "User" GROUP BY 1 ORDER BY 1 DESC LIMIT 12;
+
+\echo '--- 5.7 Security log, last 7 days: events by type (Toronto time)'
+SELECT ("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Toronto')::date AS day, type, portal,
+       count(*) FILTER (WHERE success) AS succeeded, count(*) FILTER (WHERE NOT success) AS failed
+FROM "SecurityEvent" WHERE "createdAt" > now() - interval '7 days'
+GROUP BY 1, 2, 3 ORDER BY 1 DESC, 2, 3;
 
 \echo '=== Done. Nothing was changed. ==='

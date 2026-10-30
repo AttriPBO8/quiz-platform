@@ -2,7 +2,7 @@
 -- ONE-TIME SETUP. THIS CHANGES THE DATABASE (it adds a sign-in account).
 -- =====================================================================
 -- Creates "quiz_readonly", a database account for health checks and reports.
--- It can read everything except the password columns, and it can never
+-- It can read everything except the password column, and it can never
 -- change data. Use it for day-to-day checks instead of the master
 -- "postgres" account, which can change or delete anything.
 --
@@ -28,10 +28,11 @@ GRANT USAGE ON SCHEMA public TO quiz_readonly;
 
 -- Tables with nothing secret in them: every column.
 GRANT SELECT ON "District", "Block", "QuestionBank", "Question", "Quiz",
-                "QuizManager", "Assignment", "Attempt", "_prisma_migrations"
+                "QuizManager", "Assignment", "Attempt", "SecurityEvent", "SiteSettings",
+                "_prisma_migrations"
   TO quiz_readonly;
 
--- Admins and quiz-takers: every column EXCEPT passwordHash and passwordEncrypted.
+-- Admins and quiz-takers: every column EXCEPT passwordHash.
 GRANT SELECT (id, username, name, role, active, "failedLogins", "lockedUntil",
               "sessionVersion", "createdAt")
   ON "Admin" TO quiz_readonly;
