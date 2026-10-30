@@ -31,18 +31,27 @@ async function main() {
   const users = await importUsers(db, parseCsv(readFileSync("data/sample-users.csv", "utf8")), userPassword);
   console.log("Users:", users.created, "created,", users.updated, "updated,", users.errors.length, "errors");
 
-  const questions = await importQuestions(db, "General Knowledge", JSON.parse(readFileSync("data/sample-questions.json", "utf8")));
-  console.log("Questions:", questions.created, "created,", questions.updated, "updated,", questions.errors.length, "errors");
+  for (const [bankName, file] of [["General Knowledge", "data/sample-questions.json"], ["Mathematics", "data/sample-questions-math.json"]]) {
+    const r = await importQuestions(db, bankName, JSON.parse(readFileSync(file, "utf8")));
+    console.log(`Questions (${bankName}):`, r.created, "created,", r.updated, "updated,", r.errors.length, "errors");
+  }
 
-  const bank = await db.questionBank.findUniqueOrThrow({ where: { name: "General Knowledge" } });
-  let quiz = await db.quiz.findFirst({ where: { title: "Topic A - Sample Text" } });
-  if (!quiz) quiz = await db.quiz.create({ data: { title: "Topic A - Sample Text", bankId: bank.id } });
-
+  // Three sample quizzes, each assigned to every user, so testers have a few to try.
+  const sampleQuizzes = [
+    { title: "Topic A - Sample Text", bank: "General Knowledge" },
+    { title: "Mathematics Basics", bank: "Mathematics", numEasy: 5, numMedium: 5, numHard: 5, timeLimitMinutes: 15 },
+    { title: "Quick Practice (6 questions)", bank: "General Knowledge", numEasy: 2, numMedium: 2, numHard: 2, timeLimitMinutes: 5, passingScore: 50 },
+  ];
   const localAdmins = await db.admin.findMany({ where: { role: "LOCAL_ADMIN" } });
-  await db.quizManager.createMany({ data: localAdmins.map((a) => ({ quizId: quiz.id, adminId: a.id })), skipDuplicates: true });
   const allUsers = await db.user.findMany({ select: { id: true } });
-  await db.assignment.createMany({ data: allUsers.map((u) => ({ quizId: quiz.id, userId: u.id })), skipDuplicates: true });
-  console.log(`Quiz "${quiz.title}" assigned to ${allUsers.length} users.`);
+  for (const { bank: bankName, ...settings } of sampleQuizzes) {
+    const bank = await db.questionBank.findUniqueOrThrow({ where: { name: bankName } });
+    let quiz = await db.quiz.findFirst({ where: { title: settings.title } });
+    if (!quiz) quiz = await db.quiz.create({ data: { ...settings, bankId: bank.id } });
+    await db.quizManager.createMany({ data: localAdmins.map((a) => ({ quizId: quiz.id, adminId: a.id })), skipDuplicates: true });
+    await db.assignment.createMany({ data: allUsers.map((u) => ({ quizId: quiz.id, userId: u.id })), skipDuplicates: true });
+    console.log(`Quiz "${quiz.title}" assigned to ${allUsers.length} users.`);
+  }
 }
 
 main()

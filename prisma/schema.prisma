@@ -81,8 +81,6 @@ model User {
   localAdminId      String?
   /// bcrypt hash, used to check the password at login.
   passwordHash      String
-  /// AES-256-GCM encrypted copy, so admins can view it. Never sent to quiz-takers.
-  passwordEncrypted String
   active            Boolean   @default(true)
   failedLogins      Int       @default(0)
   lockedUntil       DateTime?
@@ -192,4 +190,37 @@ model Attempt {
 
   @@index([userId, quizId])
   @@index([quizId, status])
+}
+
+/// Security log: sign-ins (successful and not), lockouts, password changes and resets,
+/// account changes, data downloads and refused access. Kept for a year.
+model SecurityEvent {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  /// For example USER_LOGIN, ADMIN_LOGIN, PASSWORD_CHANGE, ACCOUNT_LOCKED.
+  type       String
+  success    Boolean
+  /// "quiz" or "admin"
+  portal     String
+  /// Who it was about, as "user:<id>" or "admin:<id>", when known.
+  account    String?
+  /// Readable label: admin username, or a quiz-taker's name with the phone masked.
+  label      String?
+  ip         String?
+  userAgent  String?
+  detail     String?
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+}
+
+/// One row of site-wide settings (id = 1).
+model SiteSettings {
+  id               Int       @id @default(1)
+  /// Quiz-takers can sign in and start quizzes only between these times. Empty = no limit.
+  quizSiteOpensAt  DateTime?
+  quizSiteClosesAt DateTime?
+  updatedAt        DateTime  @updatedAt
+  /// Username of the admin who last changed the settings.
+  updatedBy        String?
 }

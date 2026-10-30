@@ -50,7 +50,8 @@ export async function getResultRows(admin: Pick<Admin, "id" | "role">, f: Result
   const rows = assignments.map(({ quiz, user }) => {
     const attempts = user.attempts.filter((a) => a.quizId === quiz.id);
     const s = quizStatusFor(attempts);
-    const passedAt = attempts.filter((a) => a.passed).map((a) => a.submittedAt!).sort((a, b) => a.getTime() - b.getTime())[0];
+    const firstPass = attempts.filter((a) => a.passed).sort((a, b) => a.submittedAt!.getTime() - b.submittedAt!.getTime())[0];
+    const passedAt = firstPass?.submittedAt;
     return {
       userId: user.id,
       quizId: quiz.id,
@@ -66,6 +67,7 @@ export async function getResultRows(admin: Pick<Admin, "id" | "role">, f: Result
       best: s.best,
       attempts: attempts.filter((a) => a.status === "SUBMITTED").length,
       lastAttemptId: attempts[0]?.id ?? null,
+      passedAttemptId: firstPass?.id ?? null,
       lastAttempt: fmtDate(attempts[0]?.startedAt),
       completedOn: fmtDate(passedAt),
       dueBy: fmtDate(quiz.closesAt),

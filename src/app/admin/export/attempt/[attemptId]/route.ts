@@ -1,5 +1,6 @@
 import { getCurrentAdmin, userScope } from "@/lib/auth";
 import { csvResponse, toCsv } from "@/lib/csv";
+import { logExport } from "@/lib/security";
 import { db } from "@/lib/db";
 
 export async function GET(_: Request, { params }: { params: Promise<{ attemptId: string }> }) {
@@ -15,5 +16,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ attemptId:
     return [i + 1, q?.externalId, q?.difficulty, q?.text, a >= 0 ? q?.options[a] : "", q?.options[q.correctIndex], a === -1 ? "Skipped" : a === q?.correctIndex ? "Correct" : "Wrong"];
   });
   const name = `${attempt.user.name}-${attempt.quiz.title}`.replace(/[^\w-]+/g, "_");
-  return csvResponse(`attempt-${name}.csv`, toCsv(["#", "Question id", "Level", "Question", "Answer given", "Correct answer", "Result"], body));
+  const file = `attempt-${name}.csv`;
+  await logExport(admin, file, body.length);
+  return csvResponse(file, toCsv(["#", "Question id", "Level", "Question", "Answer given", "Correct answer", "Result"], body));
 }

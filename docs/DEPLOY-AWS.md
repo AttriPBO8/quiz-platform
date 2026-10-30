@@ -36,7 +36,7 @@ On your laptop, in the project folder, run:
 ```
 npm run setup -- --print
 ```
-It prints `SESSION_SECRET`, `PASSWORD_ENCRYPTION_KEY` and `DEFAULT_USER_PASSWORD`. Use these new values for AWS, not the ones in your local `.env`. Save `PASSWORD_ENCRYPTION_KEY` in your password manager: if it is ever lost, admins can no longer view stored passwords (sign-in still works, and resetting a password fixes it for that user).
+It prints `SESSION_SECRET` and `DEFAULT_USER_PASSWORD`. Use these new values for AWS, not the ones in your local `.env`. Keep `DEFAULT_USER_PASSWORD` somewhere safe, because it is the password you give quiz-takers for their first sign-in.
 
 ## 3. Connect Amplify to GitHub
 
@@ -49,7 +49,6 @@ It prints `SESSION_SECRET`, `PASSWORD_ENCRYPTION_KEY` and `DEFAULT_USER_PASSWORD
 | --- | --- |
 | `DATABASE_URL` | the database address from step 1 |
 | `SESSION_SECRET` | from step 2 |
-| `PASSWORD_ENCRYPTION_KEY` | from step 2 |
 | `DEFAULT_USER_PASSWORD` | from step 2 |
 
 5. **Save and deploy**. The first build takes about 5 minutes. It also creates the database tables.
@@ -79,12 +78,55 @@ Then share the app address and the starting password with quiz-takers.
 
 Amplify > your app > **Hosting** > **Custom domains** > **Add domain**. Amplify sets up the HTTPS certificate for you.
 
+## 7. Firewall against attacks and floods of traffic (recommended)
+
+The app already turns away oversized requests and slows down any single address that sends too many requests or sign-in attempts. One running copy of the app cannot stop a large attack from many addresses, though; AWS WAF does that before traffic reaches the app. AWS Shield Standard (basic network-level protection) is already on for every Amplify app at no cost.
+
+1. Amplify > your app > **Hosting** > **Firewall** (AWS's guide: [Enabling AWS WAF for an Amplify application](https://docs.aws.amazon.com/amplify/latest/userguide/getting-started-using-waf.html)).
+2. Turn on the **Amplify-recommended firewall protection**. It adds AWS's managed rules for common attacks (SQL injection, cross-site scripting, known bad inputs) and blocks addresses on Amazon's bad-reputation list.
+3. If you add your own domain (step 6), also turn on **Restrict access to amplifyapp.com**, so the firewall cannot be bypassed through the default address.
+4. Add a **country** rule that allows only India (IN) **plus every country your admins sign in from** (for example Canada, CA), and blocks the rest. Leaving out an admin's country locks that admin out. People using a VPN can get around a country rule, so it reduces attacks rather than stopping them all.
+
+Between quiz cycles you can also close the quiz site to quiz-takers from the app itself: **Admin > Quiz site** (Super Admin), set the opening and closing dates. The admin site stays available for results and certificates.
+5. Add a **rate-based rule** in the AWS WAF console (the web ACL Amplify created > **Add rules** > **Add my own rules** > **Rate-based rule**): limit **2000 requests per 5 minutes per IP address**, action **Block**. Keep it this high because a whole training centre can share one address.
+
+**Cost:** Amplify charges $15 a month per app with a firewall ([pricing](https://docs.aws.amazon.com/amplify/latest/userguide/waf-pricing.html)), plus AWS WAF's own charges: $5 a month for the web ACL, $1 a month per rule, and $0.60 per million requests ([WAF pricing](https://aws.amazon.com/waf/pricing/)). For this app that is roughly $25 to $30 a month in total.
+
+## 8. Logs
+
+The app writes four kinds of log. Each line is one JSON record with a `channel` field:
+
+| Channel | What it holds |
+| --- | --- |
+| `quiz-access` | Every request to the quiz site: time, address, page, signed-in user |
+| `admin-access` | The same for the admin site |
+| `security` | Sign-ins (successful and failed), lockouts, password changes and resets, account changes, downloads, refused access and blocked requests |
+| `db-changes` | Every insert, update and delete: which table and record, what changed, and who did it. Passwords and hashes are always hidden, and phone numbers show only their last 4 digits |
+
+On a laptop each channel goes to its own file in the `logs` folder, one per day (for example `logs/security-2026-10-29.log`). On AWS, Amplify sends them all to **CloudWatch Logs**. The security events are also saved in the database, so a Super Admin can read and download them under **Admin > Security log** without opening AWS.
+
+**Reading a channel on AWS:** CloudWatch > **Logs Insights**, choose the log group whose name contains your Amplify app id, and run (change the channel name as needed):
+
+```
+fields @timestamp, @message
+| filter channel = "security"
+| sort @timestamp desc
+| limit 200
+```
+
+Failed sign-ins in the last day: `filter channel = "security" and success = 0 | stats count() by label, ip`.
+
+**Keeping costs down:** CloudWatch keeps logs forever by default. Open the app's log group > **Actions** > **Edit retention setting** and choose **6 months** (or what your organization requires). At this app's size, logs should cost a few dollars a month at most.
+
+**Alerts (optional):** in the log group, **Metric filters** > **Create metric filter** with the pattern `{ $.channel = "security" && $.success IS FALSE }`, then add a CloudWatch alarm that emails you when, say, more than 50 failures happen in 5 minutes.
+
 ## Updating the app
 
 Changes merged into `main` on GitHub deploy automatically. Watch progress in Amplify; if a build fails, the previous version stays live.
 
 ## Looking after it
 
+- **Database safety:** keep the database's **Encryption** on (the default), keep automated backups on, and never share `DATABASE_URL`. Add `?sslmode=require` to the end of `DATABASE_URL` (or `&sslmode=require` if it already has a `?`) so the connection is always encrypted.
 - **Backups:** RDS keeps daily backups for 7 days. To restore, RDS > your database > **Actions** > **Restore to point in time**.
 - **Costs:** set a monthly budget alert in **Billing** > **Budgets**.
 - **More traffic:** if many more than 500 people will take a quiz at the same moment, move the database to `db.t4g.small` (RDS > Modify) and consider **RDS Proxy**.

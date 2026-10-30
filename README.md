@@ -21,7 +21,9 @@ A responsive web app for timed multiple-choice quizzes. Teachers, Workers and He
 
 **For admins** (sign in at `/admin/login`)
 - Results: one row per person per quiz, with filters, sortable columns, summary counts and CSV download. Click a name for the question-by-question detail of an attempt.
-- Users: upload a CSV, view or reset passwords, deactivate accounts, download the passwords CSV.
+- Quiz site dates (Super Admin): open the quiz site only for the quiz cycle. Outside the dates quiz-takers see a closed page; the admin site stays available.
+- Certificates: print a Certificate of Completion for one person (Results > View, or from their attempt) or for everyone who passed in the current filters, one A4 page each. Save as PDF from the print window.
+- Users: upload a CSV, reset a user to the starting password (they must choose a new one at sign-in), deactivate accounts. Nobody, admins included, can see a user's password.
 - Quizzes: create, set question counts, time limit, pass mark and dates, assign by District, Block and Role.
 - Question banks (Super Admin): upload JSON, see how often each question is answered correctly, hide a question.
 - Admins (Super Admin): add Local Admins and reset their passwords.
@@ -68,7 +70,7 @@ You need to do steps 1 to 4 once. After that, only step 7 is needed each day.
 | Super Admin | `/admin/login`, username `superadmin`, password = `SEED_ADMIN_PASSWORD` in `.env` |
 | Local Admin | `localadmin1` to `localadmin5`, same password as the Super Admin |
 
-All 200 sample users are in `data/sample-users.csv`; the 100 sample questions are in `data/sample-questions.json`.
+All 200 sample users are in `data/sample-users.csv`. The sample questions are in `data/sample-questions.json` (100 general knowledge) and `data/sample-questions-math.json` (45 maths). Every user is assigned three sample quizzes: "Topic A - Sample Text" (30 questions), "Mathematics Basics" (15) and "Quick Practice (6 questions)".
 
 ## Everyday commands
 
@@ -99,6 +101,10 @@ All 200 sample users are in `data/sample-users.csv`; the 100 sample questions ar
 ```
 `correctOption` counts from 1 (2 = New Delhi). Older files with a 0-based `correctAnswer` are also accepted. Uploading a question with an existing `id` updates it.
 
+## Changing the certificate
+
+The organization name, place, the two signatories and whether the score is shown are set at the top of `src/lib/certificate.ts`. The signatures are the two files in `public/signatures/`; replace them with scans of the real signatures (a PNG with a transparent background works best) and update the file names in `src/lib/certificate.ts` if they change. The date printed is the day the person first passed the quiz.
+
 ## How the code is organised
 
 ```
@@ -121,9 +127,12 @@ docs/DEPLOY-AWS.md       Going live on AWS
 ## Security notes
 
 - Correct answers never leave the server; the browser only gets question text and options. Scoring happens on the server.
-- Passwords are stored as a bcrypt hash for sign-in, plus an AES-256 encrypted copy so admins can view them. The key lives only in the `PASSWORD_ENCRYPTION_KEY` setting.
+- Passwords are stored only as bcrypt hashes, which cannot be turned back into the password. No admin screen or export shows them.
 - Five wrong passwords lock an account for 15 minutes. Sessions last 8 hours and end on password change or deactivation.
 - Every admin page and download checks the admin's role and limits data to their own users.
 - During a quiz, copying, right-click and print shortcuts are blocked. Browsers cannot fully block screenshots, so treat this as a deterrent.
 - Everyone starts with the same password, so quiz-takers must set their own before they can see or take a quiz. Until a person does, anyone who knows their District, Block, Role, phone and the starting password could sign in first, so share the starting password only with the people taking quizzes.
+- Requests that are too large, use unusual methods, or come too fast from one address are refused (HTTP 413, 405 or 429). Limits: 1200 requests a minute per address (change with `RATE_LIMIT_PER_MINUTE`), 100 quiz sign-in attempts and 30 admin sign-in attempts per 10 minutes per address. On AWS, also turn on the firewall (docs/DEPLOY-AWS.md, step 7).
+- Logs: separate access logs for the quiz and admin sites, a security log and a log of every database change. See docs/DEPLOY-AWS.md, step 8. On a laptop they are in the `logs` folder; the Super Admin also has **Security log** in the admin menu.
+- Logs never contain passwords, password hashes or session tokens, and show only the last 4 digits of phone numbers. Every data download is recorded in the security log.
 - Never commit `.env`. It is already listed in `.gitignore`.

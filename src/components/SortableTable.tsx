@@ -14,6 +14,8 @@ const BADGE: Record<string, string> = {
   Passed: "bg-success-soft text-success",
   Correct: "bg-success-soft text-success",
   Active: "bg-success-soft text-success",
+  Successful: "bg-success-soft text-success",
+  Failed: "bg-danger-soft text-danger",
   Blocked: "bg-danger-soft text-danger",
   Wrong: "bg-danger-soft text-danger",
   Inactive: "bg-danger-soft text-danger",
