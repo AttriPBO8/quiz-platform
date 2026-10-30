@@ -21,6 +21,7 @@ A responsive web app for timed multiple-choice quizzes. Teachers, Workers and He
 
 **For admins** (sign in at `/admin/login`)
 - Results: one row per person per quiz, with filters, sortable columns, summary counts and CSV download. Click a name for the question-by-question detail of an attempt.
+- Quiz site dates (Super Admin): open the quiz site only for the quiz cycle. Outside the dates quiz-takers see a closed page; the admin site stays available.
 - Certificates: print a Certificate of Completion for one person (Results > View, or from their attempt) or for everyone who passed in the current filters, one A4 page each. Save as PDF from the print window.
 - Users: upload a CSV, reset a user to the starting password (they must choose a new one at sign-in), deactivate accounts. Nobody, admins included, can see a user's password.
 - Quizzes: create, set question counts, time limit, pass mark and dates, assign by District, Block and Role.

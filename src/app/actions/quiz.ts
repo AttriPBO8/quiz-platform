@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { currentUserId, requireUser } from "@/lib/auth";
 import { finalizeAttempt, finalizeExpiredAttempts, GRACE_SECONDS } from "@/lib/attempts";
 import { quizStatusFor, quizWindow, selectQuestions } from "@/lib/quiz-engine";
+import { getQuizSite } from "@/lib/site";
 
 /** Starts (or resumes) the quiz for the signed-in person, after they accepted the honor code. */
 export async function startQuiz(quizId: string) {
@@ -15,7 +16,7 @@ export async function startQuiz(quizId: string) {
   const assignment = await db.assignment.findUnique({ where: { quizId_userId: { quizId, userId: user.id } }, include: { quiz: true } });
   if (!assignment || !assignment.quiz.active) redirect("/quizzes");
   const quiz = assignment.quiz;
-  if (quizWindow(quiz) !== "OPEN") redirect("/quizzes");
+  if (quizWindow(quiz) !== "OPEN" || !(await getQuizSite()).open) redirect("/quizzes");
 
   const attempts = await db.attempt.findMany({ where: { userId: user.id, quizId } });
   const status = quizStatusFor(attempts);

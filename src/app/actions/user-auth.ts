@@ -8,6 +8,7 @@ import { formatTime, LOGIN_LOCK_MINUTES, LOGIN_MAX_FAILURES } from "@/lib/consta
 import { checkPasswordStrength, protectPassword, verifyPassword } from "@/lib/passwords";
 import { maskPhone } from "@/lib/log";
 import { securityEvent } from "@/lib/security";
+import { getQuizSite } from "@/lib/site";
 import { clearSession, createSession, readSession } from "@/lib/session";
 
 export type FormState = { error?: string; ok?: string } | undefined;
@@ -25,6 +26,11 @@ const loginSchema = z.object({
 });
 
 export async function loginUser(_: FormState, form: FormData): Promise<FormState> {
+  const site = await getQuizSite();
+  if (!site.open) {
+    await securityEvent({ type: "USER_LOGIN", success: false, portal: "quiz", detail: "Quiz site is closed" });
+    return { error: site.message! };
+  }
   const parsed = loginSchema.safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { password, ...key } = parsed.data;

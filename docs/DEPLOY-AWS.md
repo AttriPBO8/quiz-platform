@@ -85,7 +85,9 @@ The app already turns away oversized requests and slows down any single address 
 1. Amplify > your app > **Hosting** > **Firewall** (AWS's guide: [Enabling AWS WAF for an Amplify application](https://docs.aws.amazon.com/amplify/latest/userguide/getting-started-using-waf.html)).
 2. Turn on the **Amplify-recommended firewall protection**. It adds AWS's managed rules for common attacks (SQL injection, cross-site scripting, known bad inputs) and blocks addresses on Amazon's bad-reputation list.
 3. If you add your own domain (step 6), also turn on **Restrict access to amplifyapp.com**, so the firewall cannot be bypassed through the default address.
-4. If all quiz-takers are in India, add a **country** rule that allows only India (IN), plus the countries your admins work from.
+4. Add a **country** rule that allows only India (IN) **plus every country your admins sign in from** (for example Canada, CA), and blocks the rest. Leaving out an admin's country locks that admin out. People using a VPN can get around a country rule, so it reduces attacks rather than stopping them all.
+
+Between quiz cycles you can also close the quiz site to quiz-takers from the app itself: **Admin > Quiz site** (Super Admin), set the opening and closing dates. The admin site stays available for results and certificates.
 5. Add a **rate-based rule** in the AWS WAF console (the web ACL Amplify created > **Add rules** > **Add my own rules** > **Rate-based rule**): limit **2000 requests per 5 minutes per IP address**, action **Block**. Keep it this high because a whole training centre can share one address.
 
 **Cost:** Amplify charges $15 a month per app with a firewall ([pricing](https://docs.aws.amazon.com/amplify/latest/userguide/waf-pricing.html)), plus AWS WAF's own charges: $5 a month for the web ACL, $1 a month per rule, and $0.60 per million requests ([WAF pricing](https://aws.amazon.com/waf/pricing/)). For this app that is roughly $25 to $30 a month in total.

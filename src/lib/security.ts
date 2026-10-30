@@ -19,6 +19,7 @@ export const SECURITY_EVENT_LABEL = {
   QUESTIONS_UPLOADED: "Questions uploaded",
   DATA_EXPORT: "Data downloaded",
   ACCESS_DENIED: "Access refused",
+  SITE_DATES: "Quiz site dates changed",
 } as const;
 export type SecurityEventType = keyof typeof SECURITY_EVENT_LABEL;
 
