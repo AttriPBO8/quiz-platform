@@ -92,6 +92,8 @@ All 200 sample users are in `data/sample-users.csv`. The sample questions are in
 - `local_admin` (optional) is the Local Admin's username. `password` (optional) sets a specific password; otherwise the starting password is used.
 - Uploading a row that already exists updates the name and Local Admin, and the password only if one is given.
 
+**Questions spreadsheet (CSV)** (Admin > Question banks, download the questions template there). Columns: `id, question, option_1` to `option_6, correct_option, difficulty, category`. `correct_option` is 1 to 6 or A to F; empty option columns are skipped. Save from Excel as **CSV UTF-8** so Hindi text survives.
+
 **Questions JSON** (Admin > Question banks):
 ```json
 [
@@ -122,6 +124,7 @@ src/lib/                 Rules and helpers: quiz-engine (picking, scoring, block
                          auth, sessions, passwords, imports, reports
 tests/                   Automated tests
 docs/DEPLOY-AWS.md       Going live on AWS
+docs/CLIENT-TESTING.md   Test site for the client's testers (10 test users, customer questions)
 ```
 
 ## Security notes

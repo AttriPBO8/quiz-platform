@@ -100,6 +100,27 @@ const questionRow = z
   });
 
 /**
+ * Turns rows from a questions CSV (for example saved from Excel) into the same shape as the JSON
+ * file. Columns: id, question, option_1 … option_6, correct_option (1 = first option, or the
+ * letter A–F), difficulty, category. Empty option columns are skipped.
+ */
+export function questionsFromCsv(rows: Record<string, string>[]): unknown[] {
+  return rows.map((r) => {
+    const options = [1, 2, 3, 4, 5, 6].map((n) => r[`option_${n}`] ?? "").filter((o) => o !== "");
+    const c = (r.correct_option ?? "").trim().toUpperCase();
+    const correctOption = /^[A-F]$/.test(c) ? c.charCodeAt(0) - 64 : /^\d+$/.test(c) ? Number(c) : undefined;
+    return {
+      id: r.id ?? "",
+      text: r.question ?? r.text ?? "",
+      options,
+      correctOption,
+      difficulty: r.difficulty ?? "",
+      category: r.category || undefined,
+    };
+  });
+}
+
+/**
  * Question bank JSON: an array of
  * { id, text, options: [..], correctOption: 1-4, difficulty: "easy"|"medium"|"hard", category }.
  * Older files with a 0-based "correctAnswer" are accepted too.

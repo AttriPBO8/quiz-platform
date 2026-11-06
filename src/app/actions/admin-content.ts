@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db, dbForImports } from "@/lib/db";
 import { requireSuperAdmin } from "@/lib/auth";
-import { importQuestions, type ImportReport } from "@/lib/importers";
+import { importQuestions, questionsFromCsv, type ImportReport } from "@/lib/importers";
+import { parseCsv } from "@/lib/csv";
 import { generatePassword, hashPassword } from "@/lib/passwords";
 import { securityEvent } from "@/lib/security";
 
@@ -15,10 +16,14 @@ export async function uploadQuestions(_: ImportReport | { error: string } | unde
   const name = String(form.get("bankName") ?? "").trim();
   if (name.length < 2 || name.length > 80) return { error: "Give the question bank a name (2 to 80 characters)." };
   const file = form.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: "Choose a JSON file." };
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a CSV or JSON file." };
   if (file.size > 5 * 1024 * 1024) return { error: "The file is larger than 5 MB." };
   let data: unknown;
-  try { data = JSON.parse(await file.text()); } catch { return { error: "The file is not valid JSON." }; }
+  if (file.name.toLowerCase().endsWith(".csv")) {
+    data = questionsFromCsv(parseCsv(await file.text()));
+  } else {
+    try { data = JSON.parse(await file.text()); } catch { return { error: "The file is not valid JSON. For a spreadsheet, save it as CSV UTF-8 and upload the .csv file." }; }
+  }
   const report = await importQuestions(dbForImports, name, data);
   await securityEvent({ type: "QUESTIONS_UPLOADED", success: true, portal: "admin", account: `admin:${me.id}`, label: me.username, detail: `${name}: ${report.created} created, ${report.updated} updated, ${report.errors.length} errors` });
   revalidatePath("/admin/questions");
